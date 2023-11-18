@@ -10,15 +10,14 @@ UrlParser();
 ~UrlParser();
 
 
-bool ValidURLCharacters(std::string url){
-	std::string valid_non_alphanum = "";
+bool ValidXChar(std::string url){
 	return std::all_of(url.begin(), url.end(),
 		[](unsigned char c){return std::isalnum(c) || std::ispunct(c);})
 }
 
 //  Common Internet Scheme Syntax //<user>:<password>@<host>:<port>/<url-path>
 bool ValidCommonInternetUrl(std::string schemepart){
-	if(!ValidURLCharacters(schemepart))
+	if(!ValidXChar(schemepart))
 		return false;
 	if(schemepart.length < 5)//Smallest posible url schemepart is //a.c
 		return false;
@@ -51,7 +50,7 @@ std::map<std::string, std::string> parseCommonInternetScheme(std::string schemep
 	std::map<std::string, std::string> url_map;
 
 	if(!ValidCommonInternetUrl(schemepart))
-		return url_map;
+		return url_map; //Invalid URL
 
 	std::size_t i = 2;// Starting after "//"
 
@@ -102,11 +101,35 @@ std::map<std::string, std::string> parseCommonInternetScheme(std::string schemep
 std::map<std::string, std::string> parseNewsScheme(std::string schemepart){
 	std::map<std::string, std::string> url_map;
 
+	if(!ValidXChar(schemepart))
+		return url_map; //Invalid URL
+	if(schemepart.length < 1)
+		return url_map; //Invalid URL
+
+
+	std::size_t id_separator = schemepart.find('@');
+
+	if(id_separator == std::string::npos)
+		url_map["newsgroup-name"] = schemepart;
+	else{
+		if(id_separator == schemepart.length())
+			return url_map; //Invalid URL
+		url_map["message-id"] = schemepart.substr(0, id_separator);
+		url_map["domain"] = schemepart.substr(id_separator+1);
+	}
+
 	return url_map;
 }
 
 std::map<std::string, std::string> parseMailtoScheme(std::string schemepart){
 	std::map<std::string, std::string> url_map;
+
+	if(!ValidXChar(schemepart))
+		return url_map; //Invalid URL
+	if(schemepart.length < 1)
+		return url_map; //Invalid URL
+
+	url_map["addr"] = schemepart;
 
 	return url_map;
 }
