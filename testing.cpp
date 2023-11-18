@@ -19,8 +19,16 @@ protected:
 
 TEST_F(UrlParserTest, EmptyUrl){
 	std::string url = "";
-	EXPECT_EQ(url_parser->parse(url).empty(), true);
+	std::map<std::string, std::string> url_map = url_parser->parse(url);
+	EXPECT_EQ(url_map.empty(), true);
 }
+
+TEST_F(UrlParserTest, NoScheme){
+	std::string url = "://asd.cae";
+	std::map<std::string, std::string> url_map = url_parser->parse(url);
+	EXPECT_EQ(url_map.empty(), true);
+}
+
 
 TEST_F(UrlParserTest, InvalidSymbol){
 	std::string url = "http:///host at.com";
@@ -30,6 +38,12 @@ TEST_F(UrlParserTest, InvalidSymbol){
 
 TEST_F(UrlParserTest, ExtraSlash){
 	std::string url = "http:///host.com";
+	std::map<std::string, std::string> url_map = url_parser->parse(url);
+	EXPECT_EQ(url_map.empty(), true);
+}
+
+TEST_F(UrlParserTest, LessSlashes){
+	std::string url = "http:/host.com";
 	std::map<std::string, std::string> url_map = url_parser->parse(url);
 	EXPECT_EQ(url_map.empty(), true);
 }
@@ -86,6 +100,17 @@ TEST_F(UrlParserTest, HttpSpecifiedPath){
 	EXPECT_EQ(url_map["user"], "user");
 	EXPECT_EQ(url_map["password"], "");
 	EXPECT_EQ(url_map["host"], "host.com");
+}
+
+TEST_F(UrlParserTest, FullestHttp){
+	std::string url = "http://user:pass@host.com:240/dir/dir2/file.asd";
+	std::map<std::string, std::string> url_map = url_parser->parse(url);
+	EXPECT_EQ(url_map["scheme"], "http");
+	EXPECT_EQ(url_map["user"], "user");
+	EXPECT_EQ(url_map["password"], "pass");
+	EXPECT_EQ(url_map["host"], "host.com");
+	EXPECT_EQ(url_map["port"], "240");
+	EXPECT_EQ(url_map["path"], "dir/dir2/file.asd");
 }
 
 

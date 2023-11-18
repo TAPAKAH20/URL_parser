@@ -147,7 +147,7 @@ std::map<std::string, std::string> UrlParser::parse(std::string url){
 
 	// Extract Scheme from the URL
 	std::size_t colon_index = url.find(':');
-	if(colon_index == std::string::npos && colon_index == 0 && colon_index != url.length()-1){
+	if(colon_index == std::string::npos || colon_index == 0 || colon_index == url.length()-1){
 		return url_map; //URL does not contain scheme separator
 	}
 	std::string scheme = url.substr(0, colon_index);
