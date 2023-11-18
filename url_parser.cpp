@@ -4,15 +4,16 @@
 #include <string>
 #include <memory>
 #include <algorithm>
-#include <cctype>
 
 
 UrlParser();
 ~UrlParser();
 
+
 bool ValidURLCharacters(std::string url){
-	// TODO
-	return true;
+	std::string valid_non_alphanum = "";
+	return std::all_of(url.begin(), url.end(),
+		[](unsigned char c){return std::isalnum(c) || std::ispunct(c);})
 }
 
 //  Common Internet Scheme Syntax //<user>:<password>@<host>:<port>/<url-path>
@@ -29,11 +30,16 @@ bool ValidCommonInternetUrl(std::string schemepart){
 
 	std::size_t host_end = schemepart.find('/', 3);
 	std::size_t login_end = schemepart.find('@');
-	if(login_end == schemepart.length()) // Host is present after login
+	if(login_end == schemepart.length()) // Host is not present after login
 		return false;
+	else if(login_end == std::string::npos)
+		full_host = schemepart.substr(2, host_end);
+	else
+		full_host = schemepart.substr(login_end + 1, host_end);
 
 
-	
+	if(full_host.find('.') == std::string::npos || full_host.find('.') == full_host.length())
+		return false;
 
 	// TODO
 
@@ -93,10 +99,19 @@ std::map<std::string, std::string> parseCommonInternetScheme(std::string schemep
 	return url_map;
 }
 
-std::map<std::string, std::string> parseNewsScheme(std::string schemepart);
+std::map<std::string, std::string> parseNewsScheme(std::string schemepart){
+	std::map<std::string, std::string> url_map;
 
-std::map<std::string, std::string> parseMailtoScheme(std::string schemepart);
+	return url_map;
+}
 
+std::map<std::string, std::string> parseMailtoScheme(std::string schemepart){
+	std::map<std::string, std::string> url_map;
+
+	return url_map;
+}
+
+// Determine the scheme and call corresponding function
 std::map<std::string, std::string> parse(std::string url){
 
 	std::map<std::string, std::string> url_map;
@@ -119,9 +134,6 @@ std::map<std::string, std::string> parse(std::string url){
 		url_map = parseMailtoScheme(schemepart);
 		break;
 
-		
-		default:
-		url_map = parseCommonInternetScheme(schemepart);
 		case "http":
 		case "https":
 		case "ftp":
@@ -132,8 +144,12 @@ std::map<std::string, std::string> parse(std::string url){
 		case "rs":
 		case "file":
 		case "prospero":
+		default:
+		url_map = parseCommonInternetScheme(schemepart);
+		
 	}
 
+	// If parsed succsesfully prepend scheme
 	if(!url_map.isEmpty())
 		url_map.insert(url_map.begin(), std::pair<std::string, std::string>("scheme",scheme));
 
