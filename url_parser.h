@@ -4,13 +4,14 @@
 #include <map>
 #include <string>
 
+
 class UrlParser
 {
 public:
 	UrlParser();
 	~UrlParser();
 	
-	// bool Validate(std::string url);
+	// On invalid url return empty map
 	std::map<std::string, std::string> parse(std::string url);
 
 private:
