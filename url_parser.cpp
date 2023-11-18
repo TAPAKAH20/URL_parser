@@ -6,22 +6,24 @@
 #include <algorithm>
 
 
-UrlParser();
-~UrlParser();
+UrlParser::UrlParser(){}
+UrlParser::~UrlParser(){}
+	
 
-
-bool ValidXChar(std::string url){
+bool UrlParser::ValidXChar(std::string url){
 	return std::all_of(url.begin(), url.end(),
-		[](unsigned char c){return std::isalnum(c) || std::ispunct(c);})
+		[](unsigned char c){return std::isalnum(c) || std::ispunct(c);});
 }
 
 //  Common Internet Scheme Syntax //<user>:<password>@<host>:<port>/<url-path>
-bool ValidCommonInternetUrl(std::string schemepart){
+bool UrlParser::ValidCommonInternetUrl(std::string schemepart){
 	if(!ValidXChar(schemepart))
 		return false;
-	if(schemepart.length < 5)//Smallest posible url schemepart is //a.c
+	if(schemepart.length() < 5)//Smallest posible url schemepart is //a.c
 		return false;
 	if(schemepart.compare(0,2, "//", 0, 2) != 0)// Begins with //
+		return false;
+	if(schemepart.compare(0,3, "///", 0, 3) == 0)// Begins with //
 		return false;
 
 
@@ -37,7 +39,7 @@ bool ValidCommonInternetUrl(std::string schemepart){
 		full_host = schemepart.substr(login_end + 1, host_end);
 
 
-	if(full_host.find('.') == std::string::npos || full_host.find('.') == full_host.length())
+	if(full_host.find('.') == std::string::npos || full_host.find('.') == full_host.length() || !ValidXChar(full_host))
 		return false;
 
 	// TODO
@@ -46,7 +48,7 @@ bool ValidCommonInternetUrl(std::string schemepart){
 }
 
 //  Common Internet Scheme Syntax //<user>:<password>@<host>:<port>/<url-path>
-std::map<std::string, std::string> parseCommonInternetScheme(std::string schemepart){
+std::map<std::string, std::string> UrlParser::parseCommonInternetScheme(std::string schemepart){
 	std::map<std::string, std::string> url_map;
 
 	if(!ValidCommonInternetUrl(schemepart))
@@ -81,29 +83,33 @@ std::map<std::string, std::string> parseCommonInternetScheme(std::string schemep
 	std::string port = "";
 	std::size_t colon_index = schemepart.find(':', i);
 	if(colon_index != std::string::npos){
-		host = schemepart.substr(i, colon_index);
-		port = schemepart.substr(colon_index+1, schemepart.find('/', i));
+		host = schemepart.substr(i, colon_index - i);
+		port = schemepart.substr(colon_index+1, schemepart.find('/', i) - i);
 	}else{
-		host = schemepart.substr(i, schemepart.find('/', i));
+		std::size_t ending_slash = schemepart.find('/', i);
+		if(ending_slash == std::string::npos)
+			host = schemepart.substr(i);
+		else
+			host = schemepart.substr(i, ending_slash - i);
 	}
 
 	url_map["host"] = host;
 	url_map["port"] = port;
 
 	// Add any path present
-	std::size_t path_separator = schemepart.find('/', i)
+	std::size_t path_separator = schemepart.find('/', i);
 	if(path_separator != schemepart.length())
-		url_map["url_path"] = schemepart.substr(path_separator + 1);
+		url_map["path"] = schemepart.substr(path_separator + 1);
 
 	return url_map;
 }
 
-std::map<std::string, std::string> parseNewsScheme(std::string schemepart){
+std::map<std::string, std::string> UrlParser::parseNewsScheme(std::string schemepart){
 	std::map<std::string, std::string> url_map;
 
 	if(!ValidXChar(schemepart))
 		return url_map; //Invalid URL
-	if(schemepart.length < 1)
+	if(schemepart.length() < 1)
 		return url_map; //Invalid URL
 
 
@@ -121,12 +127,12 @@ std::map<std::string, std::string> parseNewsScheme(std::string schemepart){
 	return url_map;
 }
 
-std::map<std::string, std::string> parseMailtoScheme(std::string schemepart){
+std::map<std::string, std::string> UrlParser::parseMailtoScheme(std::string schemepart){
 	std::map<std::string, std::string> url_map;
 
 	if(!ValidXChar(schemepart))
 		return url_map; //Invalid URL
-	if(schemepart.length < 1)
+	if(schemepart.length() < 1)
 		return url_map; //Invalid URL
 
 	url_map["addr"] = schemepart;
@@ -135,7 +141,7 @@ std::map<std::string, std::string> parseMailtoScheme(std::string schemepart){
 }
 
 // Determine the scheme and call corresponding function
-std::map<std::string, std::string> parse(std::string url){
+std::map<std::string, std::string> UrlParser::parse(std::string url){
 
 	std::map<std::string, std::string> url_map;
 
@@ -145,35 +151,20 @@ std::map<std::string, std::string> parse(std::string url){
 		return url_map; //URL does not contain scheme separator
 	}
 	std::string scheme = url.substr(0, colon_index);
-	std::string scheme_part = url.substr(colon_index+1);
+	std::string schemepart = url.substr(colon_index+1);
 
 	//Handle schemes defined in RFC 1738
-	switch(scheme){
-		case "mailto":
+	if(scheme == "mailto")
 		url_map = parseMailtoScheme(schemepart);
-		break;
-
-		case "news":
+	else if(scheme =="news")
 		url_map = parseMailtoScheme(schemepart);
-		break;
-
-		case "http":
-		case "https":
-		case "ftp":
-		case "gopher":
-		case "ss":
-		case "telnet":
-		case "wais":
-		case "rs":
-		case "file":
-		case "prospero":
-		default:
+	else
 		url_map = parseCommonInternetScheme(schemepart);
 		
-	}
+
 
 	// If parsed succsesfully prepend scheme
-	if(!url_map.isEmpty())
+	if(!url_map.empty())
 		url_map.insert(url_map.begin(), std::pair<std::string, std::string>("scheme",scheme));
 
 	return url_map;

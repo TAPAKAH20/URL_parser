@@ -1,5 +1,5 @@
-#ifndef UrlParser_H
-#define UrlParser_H
+#ifndef URL_PARSER_H
+#define URL_PARSER_H
 
 #include <map>
 #include <string>
@@ -15,7 +15,7 @@ public:
 	std::map<std::string, std::string> parse(std::string url);
 
 private:
-	bool ValidURLCharacters(std::string url);
+	bool ValidXChar(std::string url);
 	bool ValidCommonInternetUrl(std::string schemepart);
 
 	std::map<std::string, std::string> parseCommonInternetScheme(std::string schemepart);
@@ -23,4 +23,4 @@ private:
 	std::map<std::string, std::string> parseMailtoScheme(std::string schemepart);
 };
 
-#endif // UrlParser_H
+#endif // URL_PARSER_H
