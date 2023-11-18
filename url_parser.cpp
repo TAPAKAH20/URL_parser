@@ -82,11 +82,16 @@ std::map<std::string, std::string> UrlParser::parseCommonInternetScheme(std::str
 	std::string host = "";
 	std::string port = "";
 	std::size_t colon_index = schemepart.find(':', i);
+	std::size_t ending_slash = schemepart.find('/', i);
 	if(colon_index != std::string::npos){
 		host = schemepart.substr(i, colon_index - i);
-		port = schemepart.substr(colon_index+1, schemepart.find('/', i) - i);
+		i += host.length() + 1;
+		if(ending_slash == std::string::npos)
+			port = schemepart.substr(i);
+		else
+			port = schemepart.substr(i, ending_slash - i);
+
 	}else{
-		std::size_t ending_slash = schemepart.find('/', i);
 		if(ending_slash == std::string::npos)
 			host = schemepart.substr(i);
 		else
