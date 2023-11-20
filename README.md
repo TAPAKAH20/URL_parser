@@ -39,12 +39,13 @@ On invalid urls `parse` function returns an empty map.
 
 ## Testing
 
+Unit testing is done with gtest.
+
 ```sh
 cmake -S . -B build
 cmake --build build
 ./build/testing
 ```
 
-### Testing results
+### Testing results on WSL
 ![image](https://github.com/TAPAKAH20/URL_parser/assets/24612435/31f6f9cd-ac29-4b73-b059-9ffc482493fc)
-
